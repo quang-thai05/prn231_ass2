@@ -12,4 +12,27 @@ public class ProductRepository : Repository<Product>, IProductRepository
     {
         _context = context;
     }
+
+    public Product? GetProductById(int id)
+    {
+        var product = _context.Products.FirstOrDefault(x => x.ProductId == id);
+        return product;
+    }
+
+    public List<Product>? SearchProduct(string keyword)
+    {
+        List<Product> products;
+        if (keyword.All(char.IsDigit))
+        {
+            products = _context.Products
+                .Where(x => x.ProductName.ToLower().Contains(keyword.ToLower()) ||
+                            x.UnitPrice == decimal.Parse(keyword))
+                .ToList();
+        }
+
+        products = _context.Products
+            .Where(x => x.ProductName.ToLower().Contains(keyword.ToLower()))
+            .ToList();
+        return products;
+    }
 }

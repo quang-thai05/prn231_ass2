@@ -12,4 +12,9 @@ public class CategoryRepository : Repository<Category>, ICategoryRepository
     {
         _context = context;
     }
+
+    public Category? FindById(int id)
+    {
+        return _context.Categories.FirstOrDefault(x => x.CategoryId == id);
+    }
 }

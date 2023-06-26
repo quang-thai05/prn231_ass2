@@ -1,12 +1,11 @@
 ﻿using BussinessObject;
 using DataAccess.Configuration;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.DataContext;
 
-public class EStoreDbContext : IdentityDbContext<IdentityUser>
+public class EStoreDbContext : IdentityDbContext<User>
 {
     private readonly DbContextOptions _options;
 

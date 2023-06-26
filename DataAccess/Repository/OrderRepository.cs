@@ -12,4 +12,10 @@ public class OrderRepository : Repository<Order>, IOrderRepository
     {
         _context = context;
     }
+
+    public List<Order> GetOrdersByUserId(string userId)
+    {
+        var orders = _context.Orders.Where(x => x.MemberId.Equals(userId)).ToList();
+        return orders;
+    }
 }

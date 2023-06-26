@@ -1,5 +1,8 @@
-﻿namespace DataAccess.Repository.Interfaces;
+﻿using BussinessObject;
 
-public interface ICategoryRepository
+namespace DataAccess.Repository.Interfaces;
+
+public interface ICategoryRepository : IRepository<Category>
 {
+    Category? FindById(int id);
 }

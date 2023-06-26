@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Lab2.DTOs;
 
 [NotMapped]
-public class RegisterDTO
+public class RegisterDto
 {
     [Required]
     [EmailAddress]
