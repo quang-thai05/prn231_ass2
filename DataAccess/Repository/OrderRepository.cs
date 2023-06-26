@@ -18,4 +18,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
         var orders = _context.Orders.Where(x => x.MemberId.Equals(userId)).ToList();
         return orders;
     }
+
+    public Order? GetById(int id)
+    {
+        return _context.Orders.FirstOrDefault(x => x.OrderId == id);
+    }
 }

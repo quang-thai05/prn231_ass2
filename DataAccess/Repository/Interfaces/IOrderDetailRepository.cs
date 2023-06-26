@@ -1,5 +1,14 @@
-﻿namespace DataAccess.Repository.Interfaces;
+﻿using BussinessObject;
 
-public interface IOrderDetailRepository
+namespace DataAccess.Repository.Interfaces;
+
+public interface IOrderDetailRepository : IRepository<OrderDetail>
 {
+    public List<OrderDetail>? GetByOrderId(int orderId);
+
+    public List<OrderDetail>? GetByProductId(int productId);
+
+    public Task AddOrderDetails(IEnumerable<OrderDetail> orderDetails);
+
+    public Task DeleteOrderDetails(IEnumerable<OrderDetail> orderDetails);
 }
