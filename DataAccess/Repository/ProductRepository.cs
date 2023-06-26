@@ -29,10 +29,13 @@ public class ProductRepository : Repository<Product>, IProductRepository
                             x.UnitPrice == decimal.Parse(keyword))
                 .ToList();
         }
+        else
+        {
+            products = _context.Products
+                .Where(x => x.ProductName.ToLower().Contains(keyword.ToLower()))
+                .ToList();
+        }
 
-        products = _context.Products
-            .Where(x => x.ProductName.ToLower().Contains(keyword.ToLower()))
-            .ToList();
         return products;
     }
 }

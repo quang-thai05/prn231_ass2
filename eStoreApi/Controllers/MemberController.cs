@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using System.Text;
 using BussinessObject;
-using DataAccess.DataContext;
 using Lab2.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +36,7 @@ public class MemberController : Controller
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Email, _config["AdminAcc:Email"]),
+                new(ClaimTypes.Name, _config["AdminAcc:Username"]),
                 new(ClaimTypes.Role, "Admin"),
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             };
@@ -56,6 +56,7 @@ public class MemberController : Controller
         {
             new(ClaimTypes.Name, user.UserName),
             new(ClaimTypes.Email, user.Email),
+            new("UserId", user.Id),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 
@@ -99,6 +100,7 @@ public class MemberController : Controller
         {
             await _roleManager.CreateAsync(new IdentityRole("User"));
         }
+
         if (!await _roleManager.RoleExistsAsync("Admin"))
         {
             await _roleManager.CreateAsync(new IdentityRole("Admin"));
@@ -117,6 +119,36 @@ public class MemberController : Controller
     {
         await _signInManager.SignOutAsync();
         return Ok();
+    }
+
+    [HttpGet]
+    public ActionResult GetCurrentUser()
+    {
+        try
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+
+            if (identity is not null)
+            {
+                var userClaims = identity.Claims;
+                var name = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Name)?.Value;
+                var email = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
+                var userId = userClaims.FirstOrDefault(o => o.Type == "UserId")?.Value;
+
+                return Ok(new
+                {
+                    username = name,
+                    email = email,
+                    userId = userId
+                });
+            }
+
+            return NotFound();
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
     }
 
     private JwtSecurityToken GetToken(IEnumerable<Claim> authClaims)

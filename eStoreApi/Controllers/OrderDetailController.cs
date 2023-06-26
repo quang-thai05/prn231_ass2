@@ -47,12 +47,12 @@ public class OrderDetailController : Controller
         }
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult> DeleteOrderDetails(int id)
+    [HttpDelete("{orderId:int}")]
+    public async Task<ActionResult> DeleteOrderDetails(int orderId)
     {
         try
         {
-            var orderDetails = _repository.GetByOrderId(id);
+            var orderDetails = _repository.GetByOrderId(orderId);
             if (orderDetails.Count == 0) return NotFound("Don't have order details for this order");
             await _repository.DeleteOrderDetails(orderDetails);
             return Ok("deleted successfully!");
