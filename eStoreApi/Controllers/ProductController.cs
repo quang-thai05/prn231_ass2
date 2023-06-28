@@ -1,8 +1,10 @@
 ﻿using BussinessObject;
+using DataAccess.DataContext;
 using DataAccess.Repository.Interfaces;
 using Lab2.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lab2.Controllers;
 
@@ -11,18 +13,31 @@ namespace Lab2.Controllers;
 public class ProductController : Controller
 {
     private readonly IProductRepository _repository;
+    private readonly EStoreDbContext _context;
 
-    public ProductController(IProductRepository repository)
+    public ProductController(IProductRepository repository, EStoreDbContext context)
     {
         _repository = repository;
+        _context = context;
     }
 
     [HttpGet]
-    public async Task<ActionResult> GetAllProducts()
+    public ActionResult GetAllProducts()
     {
         try
         {
-            var products = await _repository.GetAll();
+            var products = _context.Products
+                .Include(x => x.Category)
+                .Select(x => new
+                {
+                    ProductId = x.ProductId,
+                    Category = x.Category.CategoryName,
+                    ProductName = x.ProductName,
+                    Weight = x.Weight,
+                    UnitPrice = x.UnitPrice,
+                    UnitInStock = x.UnitInStock
+                })
+                .ToList();
             return Ok(products);
         }
         catch (Exception ex)
@@ -55,8 +70,17 @@ public class ProductController : Controller
     {
         try
         {
-            var product = _repository.SearchProduct(keyword);
-            return Ok(product);
+            var products = _repository.SearchProduct(keyword);
+            var result = products.Select(x => new
+            {
+                ProductId = x.ProductId,
+                Category = x.Category.CategoryName,
+                ProductName = x.ProductName,
+                Weight = x.Weight,
+                UnitPrice = x.UnitPrice,
+                UnitInStock = x.UnitInStock
+            });
+            return Ok(result);
         }
         catch (Exception ex)
         {

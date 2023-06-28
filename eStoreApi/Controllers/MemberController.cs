@@ -134,12 +134,14 @@ public class MemberController : Controller
                 var name = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Name)?.Value;
                 var email = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
                 var userId = userClaims.FirstOrDefault(o => o.Type == "UserId")?.Value;
+                var role = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Role)?.Value;
 
                 return Ok(new
                 {
                     username = name,
                     email = email,
-                    userId = userId
+                    userId = userId,
+                    role = role
                 });
             }
 

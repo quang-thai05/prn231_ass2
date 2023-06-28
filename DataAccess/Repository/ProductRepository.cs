@@ -1,6 +1,7 @@
 ﻿using BussinessObject;
 using DataAccess.DataContext;
 using DataAccess.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Repository;
 
@@ -27,12 +28,14 @@ public class ProductRepository : Repository<Product>, IProductRepository
             products = _context.Products
                 .Where(x => x.ProductName.ToLower().Contains(keyword.ToLower()) ||
                             x.UnitPrice == decimal.Parse(keyword))
+                .Include(x => x.Category)
                 .ToList();
         }
         else
         {
             products = _context.Products
                 .Where(x => x.ProductName.ToLower().Contains(keyword.ToLower()))
+                .Include(x => x.Category)
                 .ToList();
         }
 
