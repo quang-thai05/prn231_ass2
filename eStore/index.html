@@ -317,6 +317,11 @@
 									3000
 								);
 								loadProducts(userRole);
+								$("#category-name").val("")
+								$("#product-name").val("")
+								$("#product-weight").val("")
+								$("#product-unit-price").val("")
+								$("#product-unit-in-stock").val("")
 							},
 							error: function (xhr, status, error) {
 								SlimNotifierJs.notification(
