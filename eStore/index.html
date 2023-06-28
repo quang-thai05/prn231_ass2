@@ -39,18 +39,21 @@
 				<tbody id="product-table" class="table-group-divider"></tbody>
 			</table>
 
-			<!-- Modal -->
+			<!-- Add Product Modal -->
 			<div
 				class="modal fade"
-				id="exampleModal"
+				id="addProductModal"
 				tabindex="-1"
-				aria-labelledby="exampleModalLabel"
+				aria-labelledby="addProductModalLabel"
 				aria-hidden="true"
 			>
 				<div class="modal-dialog">
 					<div class="modal-content">
 						<div class="modal-header">
-							<h1 class="modal-title fs-5" id="exampleModalLabel">
+							<h1
+								class="modal-title fs-5"
+								id="addProductModalLabel"
+							>
 								Add Product
 							</h1>
 							<button
@@ -146,6 +149,117 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- Update Product Modal -->
+			<div
+				class="modal fade"
+				id="updateProductModal"
+				tabindex="-1"
+				aria-labelledby="updateProductModalLabel"
+				aria-hidden="true"
+			>
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h1
+								class="modal-title fs-5"
+								id="updateProductModalLabel"
+							>
+								Update Product
+							</h1>
+							<button
+								type="button"
+								class="btn-close"
+								data-bs-dismiss="modal"
+								aria-label="Close"
+							></button>
+						</div>
+						<div class="modal-body">
+							<form>
+								<div id="category" class="mb-3">
+									<label
+										for="category-name-update"
+										class="col-form-label"
+										>Category:</label
+									>
+									<select
+										id="category-name-update"
+										class="form-select"
+										aria-label="Default select example"
+									>
+										<option selected>Category</option>
+									</select>
+								</div>
+								<div class="mb-3">
+									<label
+										for="product-name-update"
+										class="col-form-label"
+										>Name:</label
+									>
+									<input
+										type="text"
+										class="form-control"
+										id="product-name-update"
+									/>
+								</div>
+								<div class="mb-3">
+									<label
+										for="product-weight-update"
+										class="col-form-label"
+										>Weight:</label
+									>
+									<input
+										type="number"
+										class="form-control"
+										id="product-weight-update"
+									/>
+								</div>
+								<div class="mb-3">
+									<label
+										for="product-unit-price-update"
+										class="col-form-label"
+										>Unit Price:</label
+									>
+									<input
+										type="number"
+										class="form-control"
+										id="product-unit-price-update"
+										step="0.1"
+									/>
+								</div>
+								<div class="mb-3">
+									<label
+										for="product-unit-in-stock-update"
+										class="col-form-label"
+										>Unit In Stock:</label
+									>
+									<input
+										type="number"
+										class="form-control"
+										id="product-unit-in-stock-update"
+									/>
+								</div>
+							</form>
+						</div>
+						<div class="modal-footer">
+							<button
+								type="button"
+								class="btn btn-secondary"
+								data-bs-dismiss="modal"
+							>
+								Close
+							</button>
+							<button
+								id="update-prod-btn"
+								type="button"
+								class="btn btn-primary"
+							>
+								Save
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
 		</div>
 		<script src="../vendor/jquery/jquery.min.js"></script>
 		<script src="../js/jwt-decode.js"></script>
@@ -159,19 +273,21 @@
 				$("#header").load("./utils/header.html");
 			});
 
-			$(document).ready(() => {
-				let token = localStorage.getItem("token");
+			var token = localStorage.getItem("token");
+			var decoded;
+			var userRole;
 
+			$(document).ready(() => {
 				if (token != null) {
-					let decoded = jwt_decode(token);
-					let userRole =
+					decoded = jwt_decode(token);
+					userRole =
 						decoded[
 							"http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
 						];
 
 					if (userRole == "Admin") {
 						$("#add-prod-button").append(
-							`<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+							`<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
 								Add Product
 							</button>`
 						);
@@ -213,9 +329,9 @@
 						});
 					});
 
-					loadProducts(userRole)
+					loadProducts(userRole);
 				} else {
-					loadProducts("")
+					loadProducts("");
 				}
 
 				$.ajax({
@@ -224,6 +340,12 @@
 					contentType: "application/json",
 					success: (response) => {
 						$("#category-name").append(
+							response.map(
+								(cat) =>
+									`<option value="${cat.categoryId}">${cat.categoryName}</option>`
+							)
+						);
+						$("#category-name-update").append(
 							response.map(
 								(cat) =>
 									`<option value="${cat.categoryId}">${cat.categoryName}</option>`
@@ -239,117 +361,164 @@
 						);
 					},
 				});
+			});
 
-				function loadProducts(role) {
-					$.ajax({
-						url: "https://localhost:7135/api/Product/GetAllProducts",
-						method: "GET",
-						contentType: "application/json",
-						success: (response) => {
-							$("#product-table").empty();
-							if (role === "Admin") {
-								$("#product-table").append(
-									response.map(
-										(product) => (
-											`<tr>
-												<th scope="row">${product.productId}</th>
-												<td>${product.category}</td>
-												<td>${product.productName}</td>
-												<td>${product.weight}</td>
-												<td>${product.unitPrice}$</td>
-												<td>${product.unitInStock}</td>
-												<td>
-													<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal"
-															data-bs-whatever="${product.productId}">
-														<i class="fa-solid fa-pen-to-square"></i>
-													</button>
-													<button type="button" class="btn btn-danger">
-														<i class="fa-solid fa-trash"></i>
-													</button>
-												</td>
-											</tr>`
-										)
-									)
-								);
-							} else {
-								$("#product-table").append(
-									response.map(
-										(product) => (
-											`<tr>
-												<th scope="row">${product.productId}</th>
-												<td>${product.category}</td>
-												<td>${product.productName}</td>
-												<td>${product.weight}</td>
-												<td>${product.unitPrice}$</td>
-												<td>${product.unitInStock}</td>
-												<td>
-													<i class="fa-solid fa-cart-shopping"></i>
-												</td>
-											</tr>`
-										)
-									)
-								);
-							}
-						},
-						error: function (xhr, status, error) {
-							SlimNotifierJs.notification(
-								"error",
-								"Error",
-								xhr.responseText,
-								3000
+			function loadProducts(role) {
+				$.ajax({
+					url: "https://localhost:7135/api/Product/GetAllProducts",
+					method: "GET",
+					contentType: "application/json",
+					success: (response) => {
+						$("#product-table").empty();
+						if (role === "Admin") {
+							$("#product-table").append(
+								response.map(
+									(product) =>
+										`<tr>
+											<th scope="row">${product.productId}</th>
+											<td>${product.category}</td>
+											<td>${product.productName}</td>
+											<td>${product.weight}</td>
+											<td>${product.unitPrice}$</td>
+											<td>${product.unitInStock}</td>
+											<td>
+												<button type="button" class="btn btn-success" data-bs-toggle="modal"
+														data-bs-target="#updateProductModal"
+														data-prod-id="${product.productId}"
+														data-prod-cate="${product.categoryId}"
+														data-prod-name="${product.productName}"
+														data-prod-weight="${product.weight}"
+														data-prod-unit-price="${product.unitPrice}"
+														data-prod-unit-in-stock="${product.unitInStock}"
+														onclick="updateProd(this)">
+													<i class="fa-solid fa-pen-to-square"></i>
+												</button>
+												<button type="button" class="btn btn-danger" data-prod-id="${product.productId}"
+														onclick="deleteProd(this)">
+													<i class="fa-solid fa-trash"></i>
+												</button>
+											</td>
+										</tr>`
+								)
 							);
-						},
-					});
-				}
-			
-				function updateProd(prodId) {
-					let product = getProdById(prodId)
-					$.ajax({
-						url: "https://localhost:7135/api/Product/UpdateProduct/" + prodId,
-						method: "POST",
-						contentType: "application/json",
-						data: JSON.stringify(product),
-						headers: {
-							Authorization: "Bearer " + token,
-						},
-						success: (response) => {
-							SlimNotifierJs.notification(
-								"success",
-								"Updated Successfully!",
-								response,
-								3000
+						} else {
+							$("#product-table").append(
+								response.map(
+									(product) =>
+										`<tr>
+											<th scope="row">${product.productId}</th>
+											<td>${product.category}</td>
+											<td>${product.productName}</td>
+											<td>${product.weight}</td>
+											<td>${product.unitPrice}$</td>
+											<td>${product.unitInStock}</td>
+											<td>
+												<i class="fa-solid fa-cart-shopping"></i>
+											</td>
+										</tr>`
+								)
 							);
-							loadProducts(userRole);
-						},
-						error: function (xhr, status, error) {
-							SlimNotifierJs.notification(
-								"error",
-								"Error",
-								xhr.responseText,
-								3000
-							);
-						},
-					})
-				}
+						}
+					},
+					error: function (xhr, status, error) {
+						SlimNotifierJs.notification(
+							"error",
+							"Error",
+							xhr.responseText,
+							3000
+						);
+					},
+				});
+			}
 
-				function getProdById(prodId) {
-					$.ajax({
-						url: "https://localhost:7135/api/Product/GetProductById",
-						method: "GET",
-						contentType: "application/json",
-						success: (response) => {
-							return response;
-						},
-						error: function (xhr, status, error) {
-							SlimNotifierJs.notification(
-								"error",
-								"Error",
-								xhr.responseText,
-								3000
-							);
-						},
-					})
-				}
+			var prodId;
+			var updatedProduct;
+			var currentProduct;
+
+			function updateProd(model) {
+				currentProduct = {
+					categoryId: model.getAttribute("data-prod-cate"),
+					productName: model.getAttribute("data-prod-name"),
+					weight: model.getAttribute("data-prod-weight"),
+					unitPrice: model.getAttribute("data-prod-unit-price"),
+					unitInStock: model.getAttribute("data-prod-unit-in-stock"),
+				};
+
+				$("#category-name-update").val(currentProduct.categoryId);
+				$("#product-name-update").val(currentProduct.productName);
+				$("#product-weight-update").val(currentProduct.weight);
+				$("#product-unit-price-update").val(currentProduct.unitPrice);
+				$("#product-unit-in-stock-update").val(currentProduct.unitInStock);
+
+				prodId = model.getAttribute("data-prod-id");
+			}
+
+			function deleteProd(model) {
+				prodId = model.getAttribute("data-prod-id");
+				$.ajax({
+					url: "https://localhost:7135/api/Product/DeleteProduct/" + prodId,
+					method: "DELETE",
+					contentType: "application/json",
+					headers: {
+						Authorization: "Bearer " + token,
+					},
+					success: (response) => {
+						SlimNotifierJs.notification(
+							"success",
+							"Updated Successfully!",
+							response,
+							3000
+						);
+						loadProducts(userRole);
+					},
+					error: function (xhr, status, error) {
+						SlimNotifierJs.notification(
+							"error",
+							"Error",
+							xhr.responseText,
+							3000
+						);
+					},
+				})
+			}
+
+			$("#update-prod-btn").click(() => {
+				updatedProduct = {
+					categoryId: $("#category-name-update").val(),
+					productName: $("#product-name-update").val(),
+					weight: $("#product-weight-update").val(),
+					unitPrice: $("#product-unit-price-update").val(),
+					unitInStock: $("#product-unit-in-stock-update").val(),
+				};
+
+				$.ajax({
+					url:
+						"https://localhost:7135/api/Product/UpdateProduct/" +
+						prodId,
+					method: "PUT",
+					contentType: "application/json",
+					data: JSON.stringify(updatedProduct),
+					headers: {
+						Authorization: "Bearer " + token,
+					},
+					success: (response) => {
+						SlimNotifierJs.notification(
+							"success",
+							"Updated Successfully!",
+							response,
+							3000
+						);
+						loadProducts(userRole);
+					},
+					error: function (xhr, status, error) {
+						SlimNotifierJs.notification(
+							"error",
+							"Error",
+							xhr.responseText,
+							3000
+						);
+					},
+				});
 			});
 		</script>
 	</body>

@@ -31,6 +31,7 @@ public class ProductController : Controller
                 .Select(x => new
                 {
                     ProductId = x.ProductId,
+                    CategoryId = x.CategoryId,
                     Category = x.Category.CategoryName,
                     ProductName = x.ProductName,
                     Weight = x.Weight,
@@ -74,6 +75,7 @@ public class ProductController : Controller
             var result = products.Select(x => new
             {
                 ProductId = x.ProductId,
+                CategoryId = x.CategoryId,
                 Category = x.Category.CategoryName,
                 ProductName = x.ProductName,
                 Weight = x.Weight,
