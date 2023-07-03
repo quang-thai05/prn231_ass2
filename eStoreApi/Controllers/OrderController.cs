@@ -1,4 +1,5 @@
-﻿using BussinessObject;
+﻿using AutoMapper;
+using BussinessObject;
 using DataAccess.Repository.Interfaces;
 using Lab2.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -11,10 +12,14 @@ namespace Lab2.Controllers;
 public class OrderController : Controller
 {
     private readonly IOrderRepository _repository;
+    private readonly IOrderDetailRepository _odRepository;
+    private readonly IMapper _mapper;
 
-    public OrderController(IOrderRepository repository)
+    public OrderController(IOrderRepository repository, IOrderDetailRepository odRepository, IMapper mapper)
     {
         _repository = repository;
+        _odRepository = odRepository;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -46,20 +51,21 @@ public class OrderController : Controller
         }
     }
 
-    [HttpPost]
-    public async Task<ActionResult> AddOrder([FromBody] OrderDto model)
+    [HttpPost("{userId}")]
+    public async Task<ActionResult> AddOrder(string userId, [FromBody] OrderDto model)
     {
         try
         {
             var order = new Order()
             {
-                MemberId = model.MemberId,
+                MemberId = userId,
                 OrderDate = model.OrderDate,
                 RequiredDate = model.RequiredDate,
                 ShippedDate = model.ShippedDate,
                 Freight = model.Freight
             };
             await _repository.Add(order);
+            await _odRepository.AddOrderDetails(order.OrderId, _mapper.Map<List<OrderDetail>>(model.OrderDetails));
             return Ok("Order Added successfully!");
         }
         catch (Exception e)
@@ -75,7 +81,6 @@ public class OrderController : Controller
         {
             var order = _repository.GetById(id);
             if (order == null) return NotFound("Order not found!");
-            order.MemberId = model.MemberId;
             order.OrderDate = model.OrderDate;
             order.RequiredDate = model.RequiredDate;
             order.ShippedDate = model.ShippedDate;
@@ -97,6 +102,7 @@ public class OrderController : Controller
             var order = _repository.GetById(id);
             if (order == null) return NotFound("Order Not Found!");
             await _repository.Delete(order);
+            await _odRepository.DeleteOrderDetails(id);
             return Ok("Deleted Successfully!");
         }
         catch (Exception e)

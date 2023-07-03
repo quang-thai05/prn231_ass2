@@ -2,8 +2,6 @@
 
 public class OrderDto
 {
-    public string? MemberId { get; set; }
-
     public DateTime? OrderDate { get; set; }
 
     public DateTime? RequiredDate { get; set; }
@@ -11,4 +9,6 @@ public class OrderDto
     public DateTime? ShippedDate { get; set; }
 
     public int? Freight { get; set; }
+    
+    public List<OrderDetailDto> OrderDetails { get; set; }
 }

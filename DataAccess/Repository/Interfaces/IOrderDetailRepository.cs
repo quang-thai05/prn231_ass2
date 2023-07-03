@@ -8,7 +8,7 @@ public interface IOrderDetailRepository : IRepository<OrderDetail>
 
     public List<OrderDetail>? GetByProductId(int productId);
 
-    public Task AddOrderDetails(IEnumerable<OrderDetail> orderDetails);
+    public Task AddOrderDetails(int orderId, List<OrderDetail> orderDetails);
 
-    public Task DeleteOrderDetails(IEnumerable<OrderDetail> orderDetails);
+    public Task DeleteOrderDetails(int id);
 }

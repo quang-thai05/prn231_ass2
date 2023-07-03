@@ -9,7 +9,7 @@ public class Cart
         Items = new List<CartItem>();
     }
 
-    public void AddItem(int productId, int quantity)
+    public void AddItem(int productId, string productName, int quantity, decimal? unitPrice)
     {
         var existingItem = Items.FirstOrDefault(item => item.ProductId == productId);
 
@@ -22,7 +22,9 @@ public class Cart
             var newItem = new CartItem
             {
                 ProductId = productId,
-                Quantity = quantity
+                ProductName = productName,
+                Quantity = quantity,
+                UnitPrice = unitPrice
             };
             Items.Add(newItem);
         }

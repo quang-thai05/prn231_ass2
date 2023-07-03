@@ -1,6 +1,7 @@
 ﻿using DataAccess.DataContext;
 using DataAccess.Repository.Interfaces;
 using Lab2.DTOs.Cart;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -8,6 +9,7 @@ namespace Lab2.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
+// [Authorize]
 public class CartController : Controller
 {
     private readonly EStoreDbContext _context;
@@ -30,44 +32,45 @@ public class CartController : Controller
     }
 
     [HttpPost]
-    public IActionResult AddToCart(int productId, int quantity)
+    public IActionResult AddToCart([FromBody] ProductCartItem model)
     {
+        var addingProduct = _productRepository.GetProductById(model.ProductId);
+        if (addingProduct == null) return NotFound("Product you want to add is not exist!");
+
         var cartJson = Request.Cookies["CartCookie"];
+        Cart cart;
+        cart = cartJson != null ? JsonConvert.DeserializeObject<Cart>(cartJson) : new Cart();
 
-        if (cartJson != null)
+        if (addingProduct.UnitInStock < model.Quantity)
         {
-            var cart = JsonConvert.DeserializeObject<Cart>(cartJson);
-            var addingProduct = _productRepository.GetProductById(productId);
-            if (addingProduct == null) return BadRequest("Product you want to add is not exist!");
-
-            if (addingProduct.UnitInStock < quantity)
-            {
-                return BadRequest("Quantity you need out of stock!");
-            }
-            
-            cart.AddItem(productId, quantity);
-
-            Response.Cookies.Append("CartCookie", JsonConvert.SerializeObject(cart));
-        }
-        else
-        {
-            var cart = new Cart();
-            cart.AddItem(productId, quantity);
-
-            Response.Cookies.Append("CartCookie", JsonConvert.SerializeObject(cart));
+            return BadRequest("Quantity you need out of stock!");
         }
 
-        return Ok();
+        cart.AddItem(model.ProductId, addingProduct.ProductName, model.Quantity, addingProduct.UnitPrice);
+        addingProduct.UnitInStock -= model.Quantity;
+        _context.SaveChanges();
+
+        Response.Cookies.Append("CartCookie", JsonConvert.SerializeObject(cart));
+
+        return Ok("Added successfully!");
     }
 
     [HttpDelete("{productId:int}")]
     public IActionResult RemoveFromCart(int productId)
     {
         var cartJson = Request.Cookies["CartCookie"];
-
         if (cartJson == null) return NotFound();
         var cart = JsonConvert.DeserializeObject<Cart>(cartJson);
+
+        var removingProduct = _productRepository.GetProductById(productId);
+        if (removingProduct == null) return NotFound("Product you want to add is not exist!");
+
+        var cartItem = cart.Items.FirstOrDefault(x => x.ProductId == productId);
+        var cartQuantity = cartItem.Quantity;
+
         cart.RemoveItem(productId);
+        removingProduct.UnitInStock += cartQuantity;
+        _context.SaveChanges();
 
         Response.Cookies.Append("CartCookie", JsonConvert.SerializeObject(cart));
 

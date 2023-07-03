@@ -13,12 +13,14 @@ namespace Lab2.Controllers;
 public class ProductController : Controller
 {
     private readonly IProductRepository _repository;
+    private readonly IOrderDetailRepository _odRepository;
     private readonly EStoreDbContext _context;
 
-    public ProductController(IProductRepository repository, EStoreDbContext context)
+    public ProductController(IProductRepository repository, EStoreDbContext context, IOrderDetailRepository odRepository)
     {
         _repository = repository;
         _context = context;
+        _odRepository = odRepository;
     }
 
     [HttpGet]
@@ -151,6 +153,7 @@ public class ProductController : Controller
             }
 
             await _repository.Delete(product);
+            await _odRepository.DeleteOrderDetails(id);
             return Ok("Deleted successfully!");
         }
         catch (Exception ex)

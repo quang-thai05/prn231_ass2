@@ -18,23 +18,6 @@ $(document).ready(() => {
 			);
 		}
 
-		$.ajax({
-			url: "https://localhost:7135/api/Cart/CreateCart",
-			method: "POST",
-			contentType: "application/json",
-			success: (response) => {
-				console.log("Cart created!");
-			},
-			error: function (xhr, status, error) {
-				SlimNotifierJs.notification(
-					"error",
-					"Error",
-					xhr.responseText,
-					3000
-				);
-			},
-		});
-
 		$("#add-prod-btn").click(() => {
 			let product = {
 				categoryId: $("#category-name").val(),
@@ -122,47 +105,52 @@ function loadProducts(role) {
 					response.map(
 						(product) =>
 							`<tr>
-											<th scope="row">${product.productId}</th>
-											<td>${product.category}</td>
-											<td>${product.productName}</td>
-											<td>${product.weight}</td>
-											<td>${product.unitPrice}$</td>
-											<td>${product.unitInStock}</td>
-											<td>
-												<button type="button" class="btn btn-success" data-bs-toggle="modal"
-														data-bs-target="#updateProductModal"
-														data-prod-id="${product.productId}"
-														data-prod-cate="${product.categoryId}"
-														data-prod-name="${product.productName}"
-														data-prod-weight="${product.weight}"
-														data-prod-unit-price="${product.unitPrice}"
-														data-prod-unit-in-stock="${product.unitInStock}"
-														onclick="updateProd(this)">
-													<i class="fa-solid fa-pen-to-square"></i>
-												</button>
-												<button type="button" class="btn btn-danger" data-prod-id="${product.productId}"
-														onclick="deleteProd(this)">
-													<i class="fa-solid fa-trash"></i>
-												</button>
-											</td>
-										</tr>`
+								<th scope="row">${product.productId}</th>
+								<td>${product.category}</td>
+								<td>${product.productName}</td>
+								<td>${product.weight}</td>
+								<td>${product.unitPrice}$</td>
+								<td>${product.unitInStock}</td>
+								<td>
+									<button type="button" class="btn btn-success" data-bs-toggle="modal"
+											data-bs-target="#updateProductModal"
+											data-prod-id="${product.productId}"
+											data-prod-cate="${product.categoryId}"
+											data-prod-name="${product.productName}"
+											data-prod-weight="${product.weight}"
+											data-prod-unit-price="${product.unitPrice}"
+											data-prod-unit-in-stock="${product.unitInStock}"
+											onclick="updateProd(this)">
+										<i class="fa-solid fa-pen-to-square"></i>
+									</button>
+									<button type="button" class="btn btn-danger" data-prod-id="${product.productId}"
+											onclick="deleteProd(this)">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</td>
+							</tr>`
 					)
 				);
 			} else {
 				$("#product-table").append(
 					response.map(
-						(product) =>
+						(product) => (
 							`<tr>
-											<th scope="row">${product.productId}</th>
-											<td>${product.category}</td>
-											<td>${product.productName}</td>
-											<td>${product.weight}</td>
-											<td>${product.unitPrice}$</td>
-											<td>${product.unitInStock}</td>
-											<td>
-												<i class="fa-solid fa-cart-shopping"></i>
-											</td>
-										</tr>`
+								<th scope="row">${product.productId}</th>
+								<td>${product.category}</td>
+								<td>${product.productName}</td>
+								<td>${product.weight}</td>
+								<td>${product.unitPrice}$</td>
+								<td>${product.unitInStock}</td>
+								<td>
+									<button type="button" class="btn btn-primary"
+										data-prod-id="${product.productId}"
+										onclick="addToCart(this)">
+										<i class="fa-solid fa-cart-shopping"></i>
+									</button>
+								</td>
+							</tr>`
+						)
 					)
 				);
 			}
@@ -176,6 +164,41 @@ function loadProducts(role) {
 			);
 		},
 	});
+}
+
+function addToCart(model) {
+	let data = {
+		productId: model.getAttribute("data-prod-id"),
+		quantity: 1,
+	}
+
+	$.ajax({
+		url: "https://localhost:7135/api/Cart/AddToCart",
+		method: "POST",
+		credentials: 'include',
+		contentType: "application/json",
+		data: JSON.stringify(data),
+		headers: {
+			Authorization: "Bearer " + token,
+		},
+		success: (res) => {
+			SlimNotifierJs.notification(
+				"success",
+				"Success",
+				res,
+				3000
+			);
+			loadProducts();
+		},
+		error: (xhr) => {
+			SlimNotifierJs.notification(
+				"error",
+				"Error",
+				xhr.responseText,
+				3000
+			);
+		}
+	})
 }
 
 var prodId;
