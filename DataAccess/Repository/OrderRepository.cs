@@ -1,6 +1,7 @@
 ﻿using BussinessObject;
 using DataAccess.DataContext;
 using DataAccess.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Repository;
 
@@ -15,7 +16,9 @@ public class OrderRepository : Repository<Order>, IOrderRepository
 
     public List<Order> GetOrdersByUserId(string userId)
     {
-        var orders = _context.Orders.Where(x => x.MemberId.Equals(userId)).ToList();
+        var orders = _context.Orders
+            .Where(x => x.MemberId.Equals(userId))
+            .ToList();
         return orders;
     }
 

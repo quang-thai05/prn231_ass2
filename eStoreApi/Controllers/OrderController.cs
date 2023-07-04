@@ -38,12 +38,22 @@ public class OrderController : Controller
     }
 
     [HttpGet("{userId}")]
+    [Authorize(Roles = "User")]
     public ActionResult GetOrdersByUserId(string userId)
     {
         try
         {
             var orders = _repository.GetOrdersByUserId(userId);
-            return Ok(orders);
+            var result = orders
+                .Select(x => new
+                {
+                    OrderId = x.OrderId,
+                    OrderDate = $"{x.OrderDate:dd MMM, yyyy}",
+                    RequiredDate = $"{x.RequiredDate: dd MMM, yyyy}",
+                    ShippedDate = $"{x.ShippedDate: dd MMM, yyyy}",
+                    Freight = x.Freight
+                }).ToList();
+            return Ok(result);
         }
         catch (Exception e)
         {
@@ -52,6 +62,7 @@ public class OrderController : Controller
     }
 
     [HttpPost("{userId}")]
+    [Authorize(Roles = "User")]
     public async Task<ActionResult> AddOrder(string userId, [FromBody] OrderDto model)
     {
         try
@@ -75,6 +86,7 @@ public class OrderController : Controller
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "User")]
     public async Task<ActionResult> UpdateOrder(int id, [FromBody] OrderDto model)
     {
         try
@@ -95,6 +107,7 @@ public class OrderController : Controller
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "User")]
     public async Task<ActionResult> DeleteOrder(int id)
     {
         try
