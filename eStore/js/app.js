@@ -175,17 +175,19 @@ function addToCart(model) {
 	$.ajax({
 		url: "https://localhost:7135/api/Cart/AddToCart",
 		method: "POST",
-		credentials: 'include',
 		contentType: "application/json",
 		data: JSON.stringify(data),
 		headers: {
-			Authorization: "Bearer " + token,
+			Authorization: "Bearer " + token
+		},
+		xhrFields: {
+			withCredentials: true
 		},
 		success: (res) => {
 			SlimNotifierJs.notification(
 				"success",
 				"Success",
-				res,
+				"Added Successfully",
 				3000
 			);
 			loadProducts();

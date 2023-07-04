@@ -35,14 +35,18 @@ $(document).ready(function () {
 	getCart();
 });
 
+var cookies = document.cookie
+
 function getCart() {
 	$.ajax({
 		url: "https://localhost:7135/api/Cart/GetCart",
 		method: "GET",
-		credentials: 'include',
+		xhrFields: {
+			withCredentials: true
+		},
 		contentType: "application/json",
 		headers: {
-			Authorization: "Bearer " + token,
+			Authorization: "Bearer " + token
 		},
 		success: (response) => {
 			$(".basket").append(

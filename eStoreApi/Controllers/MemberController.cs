@@ -2,7 +2,10 @@
 using System.Security.Claims;
 using System.Text;
 using BussinessObject;
+using DataAccess.DataContext;
 using Lab2.DTOs;
+using Lab2.DTOs.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -14,17 +17,19 @@ namespace Lab2.Controllers;
 public class MemberController : Controller
 {
     private readonly IConfiguration _config;
+    private readonly EStoreDbContext _context;
     private UserManager<User> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly SignInManager<User> _signInManager;
 
     public MemberController(IConfiguration config, UserManager<User> userManager,
-        RoleManager<IdentityRole> roleManager, SignInManager<User> signInManager)
+        RoleManager<IdentityRole> roleManager, SignInManager<User> signInManager, EStoreDbContext context)
     {
         _config = config;
         _userManager = userManager;
         _roleManager = roleManager;
         _signInManager = signInManager;
+        _context = context;
     }
 
     [HttpPost]
@@ -129,7 +134,7 @@ public class MemberController : Controller
             var identity = HttpContext.User.Identity as ClaimsIdentity;
 
             if (identity is null) return NotFound();
-            
+
             var userClaims = identity.Claims;
             var name = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Name)?.Value;
             var email = userClaims.FirstOrDefault(o => o.Type == ClaimTypes.Email)?.Value;
@@ -143,11 +148,53 @@ public class MemberController : Controller
                 userId = userId,
                 role = role
             });
-
         }
         catch (Exception e)
         {
             return BadRequest(e.Message);
+        }
+    }
+
+    [HttpGet("{userId}")]
+    [Authorize(Roles = "User")]
+    public ActionResult GetUserProfile(string userId)
+    {
+        try
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Id.Equals(userId));
+            if (user is null) return NotFound();
+            return Ok(new
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                Phone = user.PhoneNumber
+            });
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
+    }
+
+    [HttpPut("{userId}")]
+    [Authorize(Roles = "User")]
+    public ActionResult UpdateUserProfile(string userId, [FromBody] UserProfileDto model)
+    {
+        try
+        {
+            var user = _context.Users.FirstOrDefault(x => x.Id.Equals(userId));
+            if (user is null) return NotFound();
+            user.UserName = model.UserName;
+            user.Email = model.Email;
+            user.PhoneNumber = model.Phone;
+            _context.Update(user);
+            var result = _context.SaveChanges();
+            if (result == 0) return BadRequest("Update Failed");
+            return Ok("Updated Successfully!");
+        }
+        catch (Exception)
+        {
+            return BadRequest();
         }
     }
 
