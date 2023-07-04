@@ -32,7 +32,6 @@ public class OrderDetailRepository : Repository<OrderDetail>, IOrderDetailReposi
             od.OrderId = orderId;
             var product = _context.Products.FirstOrDefault(x => x.ProductId == od.ProductId);
             od.UnitPrice = product.UnitPrice;
-            product.UnitInStock -= od.Quantity;
         }
         _context.OrderDetails.AddRange(orderDetails);
         await _context.SaveChangesAsync();

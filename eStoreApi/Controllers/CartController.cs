@@ -3,77 +3,112 @@ using DataAccess.Repository.Interfaces;
 using Lab2.DTOs.Cart;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 
 namespace Lab2.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-// [Authorize]
+[Authorize]
 public class CartController : Controller
 {
     private readonly EStoreDbContext _context;
     private readonly IProductRepository _productRepository;
+    private readonly CartService _cartService;
 
-    public CartController(EStoreDbContext context, IProductRepository productRepository)
+    public CartController(EStoreDbContext context, IProductRepository productRepository, CartService cartService)
     {
         _context = context;
         _productRepository = productRepository;
+        _cartService = cartService;
     }
 
     [HttpGet]
-    public IActionResult GetCart()
+    public ActionResult<List<CartItem>> GetCartItems()
     {
-        var cartJson = Request.Cookies["CartCookie"];
-
-        if (cartJson == null) return Ok(new Cart());
-        var cart = JsonConvert.DeserializeObject<Cart>(cartJson);
-        return Ok(cart);
+        try
+        {
+            string token = HttpContext.Request.Headers["Authorization"];
+            if (token == null) return Unauthorized();
+            var cartItems = _cartService.GetCartItems(token);
+            return cartItems;
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
     }
 
     [HttpPost]
-    public IActionResult AddToCart([FromBody] ProductCartItem model)
+    public IActionResult AddCartItem([FromBody] ProductCartItem model)
     {
-        var addingProduct = _productRepository.GetProductById(model.ProductId);
-        if (addingProduct == null) return NotFound("Product you want to add is not exist!");
-
-        var cartJson = Request.Cookies["CartCookie"];
-        Cart cart;
-        cart = cartJson != null ? JsonConvert.DeserializeObject<Cart>(cartJson) : new Cart();
-
-        if (addingProduct.UnitInStock < model.Quantity)
+        try
         {
-            return BadRequest("Quantity you need out of stock!");
+            var addingProduct = _context.Products.FirstOrDefault(x => x.ProductId.Equals(model.ProductId));
+            if (addingProduct is null) return NotFound("Product is not exist");
+            if (model.Quantity > addingProduct.UnitInStock) return BadRequest("Do not have enough items in stock");
+
+            string token = HttpContext.Request.Headers["Authorization"];
+            if (token == null) return Unauthorized();
+
+            var cartItem = new CartItem()
+            {
+                ProductId = model.ProductId,
+                ProductName = addingProduct.ProductName,
+                Quantity = model.Quantity,
+                UnitPrice = addingProduct.UnitPrice
+            };
+            addingProduct.UnitInStock -= model.Quantity;
+            _context.SaveChanges();
+            _cartService.AddCartItem(token, cartItem);
+
+            return Ok();
         }
-
-        cart.AddItem(model.ProductId, addingProduct.ProductName, model.Quantity, addingProduct.UnitPrice);
-        addingProduct.UnitInStock -= model.Quantity;
-        _context.SaveChanges();
-
-        Response.Cookies.Append("CartCookie", JsonConvert.SerializeObject(cart));
-
-        return Ok("Added successfully!");
+        catch (Exception)
+        {
+            return BadRequest();
+        }
     }
 
     [HttpDelete("{productId:int}")]
-    public IActionResult RemoveFromCart(int productId)
+    public IActionResult RemoveCartItem(int productId)
     {
-        var cartJson = Request.Cookies["CartCookie"];
-        if (cartJson == null) return NotFound();
-        var cart = JsonConvert.DeserializeObject<Cart>(cartJson);
+        try
+        {
+            var removeItem = _context.Products.FirstOrDefault(x => x.ProductId == productId);
+            if (removeItem is null) return NotFound();
+            
+            string token = HttpContext.Request.Headers["Authorization"];
+            if (token == null) return Unauthorized();
+            
+            var item = _cartService.GetCartItem(token, productId);
+            if (item != null)
+            {
+                removeItem.UnitInStock += item.Quantity;
+                _context.SaveChanges();
+            }
+            _cartService.RemoveCartItem(token, productId);
+            return Ok();
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
+    }
 
-        var removingProduct = _productRepository.GetProductById(productId);
-        if (removingProduct == null) return NotFound("Product you want to add is not exist!");
-
-        var cartItem = cart.Items.FirstOrDefault(x => x.ProductId == productId);
-        var cartQuantity = cartItem.Quantity;
-
-        cart.RemoveItem(productId);
-        removingProduct.UnitInStock += cartQuantity;
-        _context.SaveChanges();
-
-        Response.Cookies.Append("CartCookie", JsonConvert.SerializeObject(cart));
-
-        return Ok();
+    [HttpDelete]
+    public ActionResult RemoveAllItems()
+    {
+        try
+        {
+            string token = HttpContext.Request.Headers["Authorization"];
+            if (token == null) return Unauthorized();
+            
+            _cartService.RemoveAllItem(token);
+            return Ok();
+        }
+        catch (Exception)
+        {
+            return BadRequest();
+        }
     }
 }

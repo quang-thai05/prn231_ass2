@@ -3,6 +3,7 @@ using BussinessObject;
 using DataAccess.DataContext;
 using DataAccess.Repository;
 using DataAccess.Repository.Interfaces;
+using Lab2.Controllers;
 using Lab2.MapperProfile;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -97,6 +98,7 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+builder.Services.AddSingleton<CartService>();
 
 var app = builder.Build();
 
