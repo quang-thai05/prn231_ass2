@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using BussinessObject;
+using DataAccess.DataContext;
 using DataAccess.Repository.Interfaces;
 using Lab2.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lab2.Controllers;
 
@@ -11,12 +13,15 @@ namespace Lab2.Controllers;
 [Route("api/[controller]/[action]")]
 public class OrderController : Controller
 {
+    private readonly EStoreDbContext _context;
     private readonly IOrderRepository _repository;
     private readonly IOrderDetailRepository _odRepository;
     private readonly IMapper _mapper;
 
-    public OrderController(IOrderRepository repository, IOrderDetailRepository odRepository, IMapper mapper)
+    public OrderController(EStoreDbContext context, IOrderRepository repository, IOrderDetailRepository odRepository,
+        IMapper mapper)
     {
+        _context = context;
         _repository = repository;
         _odRepository = odRepository;
         _mapper = mapper;
@@ -117,6 +122,49 @@ public class OrderController : Controller
             await _repository.Delete(order);
             await _odRepository.DeleteOrderDetails(id);
             return Ok("Deleted Successfully!");
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpGet("{fromDate:datetime}/{toDate:datetime}")]
+    public IActionResult GetSaleReport(DateTime fromDate, DateTime toDate)
+    {
+        try
+        {
+            var result = _context.OrderDetails
+                .Join(_context.Orders,
+                    od => od.OrderId,
+                    o => o.OrderId,
+                    (od, o) => new { OrderDetail = od, Order = o })
+                .Join(
+                    _context.Products,
+                    od => od.OrderDetail.ProductId,
+                    p => p.ProductId,
+                    (od, p) => new { od.OrderDetail, od.Order, Product = p }
+                )
+                .Where(x => x.Order.OrderDate >= fromDate && x.Order.OrderDate <= toDate)
+                .GroupBy(
+                    x => new
+                    {
+                        OrderDate = x.Order.OrderDate,
+                        ProductName = x.Product.ProductName,
+                        UnitPrice = x.OrderDetail.UnitPrice
+                    })
+                .Select(g => new
+                {
+                    OrderDate = g.Key.OrderDate,
+                    ProductName = g.Key.ProductName,
+                    UnitPrice = g.Key.UnitPrice,
+                    Quantity = g.Sum(x => x.OrderDetail.Quantity),
+                    Sales = g.Sum(x => x.OrderDetail.Quantity) * g.Key.UnitPrice
+                })
+                .OrderByDescending(x => x.OrderDate)
+                .ToList();
+
+            return Ok(result);
         }
         catch (Exception e)
         {

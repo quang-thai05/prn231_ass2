@@ -1,7 +1,6 @@
 ﻿using BussinessObject;
 using DataAccess.DataContext;
 using DataAccess.Repository.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.Repository;
 
