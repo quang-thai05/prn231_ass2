@@ -162,6 +162,7 @@ public class OrderController : Controller
                     Sales = g.Sum(x => x.OrderDetail.Quantity) * g.Key.UnitPrice
                 })
                 .OrderByDescending(x => x.OrderDate)
+                .ThenByDescending(x => x.Sales)
                 .ToList();
 
             return Ok(result);
