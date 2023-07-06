@@ -5,7 +5,6 @@ using DataAccess.Repository.Interfaces;
 using Lab2.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Lab2.Controllers;
 
